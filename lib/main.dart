@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:riverpod_dummy/models/todo.dart';
+import 'package:riverpod_dummy/views/todo.vm.dart';
 import 'package:uuid/uuid.dart';
 
 const uid = Uuid();
@@ -30,11 +32,12 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class Home extends HookWidget {
+class Home extends HookConsumerWidget {
   const Home({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final todos = ref.watch(filteredTodos);
     final newTodoController = useTextEditingController();
 
     return Scaffold(
@@ -49,13 +52,29 @@ class Home extends HookWidget {
                 controller: newTodoController,
                 decoration:
                     const InputDecoration(labelText: 'What needs to be done?'),
-                onSubmitted: (value) {},
+                onSubmitted: (value) {
+                  ref.read(todoListProvider.notifier).add(value);
+                  newTodoController.clear();
+                },
               ),
               const SizedBox(height: 42),
               Column(
-                children: const [
+                children: [
                   // Tool bar
                   // todo list
+                  if (todos.isNotEmpty) const Divider(height: 0),
+                  for (int i = 0; i < todos.length; i++) ...[
+                    if (i > 0) const Divider(height: 0),
+                    Dismissible(
+                      key: ValueKey(todos[i].id),
+                      onDismissed: (_) {
+                        ref.read(todoListProvider.notifier).remove(todos[i]);
+                      },
+                      child: TodoItem(
+                        todo: todos[i],
+                      ),
+                    ),
+                  ]
                 ],
               ),
             ],
@@ -93,11 +112,55 @@ class Title extends StatelessWidget {
   }
 }
 
-class TodoItem extends StatelessWidget {
-  const TodoItem({super.key});
+class TodoItem extends HookConsumerWidget {
+  const TodoItem({Key? key, required this.todo}) : super(key: key);
+
+  final Todo todo;
 
   @override
-  Widget build(BuildContext context) {
-    return const Text('Todo item');
+  Widget build(BuildContext context, WidgetRef ref) {
+    // final todo = ref.watch(_currentTodo);
+    final itemFocusNode = useFocusNode();
+    useListenable(itemFocusNode);
+    final isFocused = itemFocusNode.hasFocus;
+
+    final textEditingController = useTextEditingController();
+    final textFieldFocusNode = useFocusNode();
+
+    return Material(
+      color: Colors.white,
+      elevation: 6,
+      child: Focus(
+        focusNode: itemFocusNode,
+        onFocusChange: (focused) {
+          if (focused) {
+            textEditingController.text = todo.description;
+          } else {
+            // Commit changes only when the textfield is unfocused, for performance
+            ref
+                .read(todoListProvider.notifier)
+                .edit(id: todo.id, description: textEditingController.text);
+          }
+        },
+        child: ListTile(
+          onTap: () {
+            itemFocusNode.requestFocus();
+            textFieldFocusNode.requestFocus();
+          },
+          leading: Checkbox(
+            value: todo.completed,
+            onChanged: (value) =>
+                ref.read(todoListProvider.notifier).toggle(todo.id),
+          ),
+          title: isFocused
+              ? TextField(
+                  autofocus: true,
+                  focusNode: textFieldFocusNode,
+                  controller: textEditingController,
+                )
+              : Text(todo.description),
+        ),
+      ),
+    );
   }
 }

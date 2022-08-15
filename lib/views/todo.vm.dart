@@ -26,6 +26,25 @@ final todoListFilter = StateProvider((ref) {
 final filteredTodos = Provider<List<Todo>>((ref) {
   final filter = ref.watch(todoListFilter);
   final todos = ref.watch(todoListProvider);
+
+  List<Todo> filteredTodos;
+
+  switch (filter) {
+    case TodoListFilter.completed:
+      filteredTodos = todos.where((todo) => todo.completed).toList();
+      break;
+    case TodoListFilter.active:
+      filteredTodos = todos.where((todo) => !todo.completed).toList();
+      break;
+    case TodoListFilter.all:
+      filteredTodos = todos;
+      break;
+    default:
+      filteredTodos = todos;
+      break;
+  }
+
+  return filteredTodos;
 });
 
 class TodoList extends StateNotifier<List<Todo>> {
