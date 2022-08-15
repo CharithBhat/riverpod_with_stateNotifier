@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
+const uid = Uuid();
 
 void main() {
   runApp(
@@ -10,121 +13,91 @@ void main() {
   );
 }
 
-abstract class WebsocketClient {
-  Stream<int> getCounterStream();
-}
-
-class FakeWebsocketClient implements WebsocketClient {
-  @override
-  Stream<int> getCounterStream() async* {
-    int i = 0;
-    while (true) {
-      await Future.delayed(const Duration(milliseconds: 500));
-      yield i++;
-    }
-  }
-}
-
-final websocketClientProvider = Provider<WebsocketClient>(
-  (ref) {
-    return FakeWebsocketClient();
-  },
-);
-
-final counterProvider = StateProvider((ref) => 0);
-
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Material App',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const HomePage(),
+      home: const Scaffold(
+        body: Home(),
+      ),
     );
   }
 }
 
-class HomePage extends StatelessWidget {
-  const HomePage({Key? key}) : super(key: key);
+class Home extends HookWidget {
+  const Home({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final newTodoController = useTextEditingController();
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-      ),
       body: Center(
-        child: ElevatedButton(
-          child: const Text('Go to Counter Page'),
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: ((context) => const CounterPage()),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+            children: [
+              // todo title
+              TextField(
+                controller: newTodoController,
+                decoration:
+                    const InputDecoration(labelText: 'What needs to be done?'),
+                onSubmitted: (value) {},
               ),
-            );
-          },
+              const SizedBox(height: 42),
+              Column(
+                children: const [
+                  // Tool bar
+                  // todo list
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class CounterPage extends ConsumerWidget {
-  const CounterPage({Key? key}) : super(key: key);
+class ToolBar extends StatelessWidget {
+  const ToolBar({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final int counter = ref.watch(counterProvider);
+  Widget build(BuildContext context) {
+    return const Text('ToolBar');
+  }
+}
 
-    ref.listen<int>(
-      counterProvider,
-      ((previous, next) {
-        if (next >= 5) {
-          showDialog(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                title: const Text('Warning'),
-                content: const Text(
-                    'Counter dangerously high. Consider resetting it.'),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('OK'),
-                  )
-                ],
-              );
-            },
-          );
-        }
-      }),
-    );
+class Title extends StatelessWidget {
+  const Title({Key? key}) : super(key: key);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Counter app with riverpod'),
-        actions: [
-          IconButton(
-              onPressed: () {
-                ref.refresh(counterProvider);
-              },
-              icon: const Icon(Icons.refresh))
-        ],
-      ),
-      body: Center(
-        child: Text(counter.toString()),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          ref.read(counterProvider.notifier).state++;
-        },
-        child: const Icon(Icons.add),
+  @override
+  Widget build(BuildContext context) {
+    return const Text(
+      'todos',
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        color: Color.fromARGB(38, 47, 47, 247),
+        fontSize: 100,
+        fontWeight: FontWeight.w100,
+        fontFamily: 'Helvetica Neue',
       ),
     );
+  }
+}
+
+class TodoItem extends StatelessWidget {
+  const TodoItem({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Text('Todo item');
   }
 }
