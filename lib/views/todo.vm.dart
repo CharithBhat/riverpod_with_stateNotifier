@@ -23,8 +23,17 @@ final todoListFilter = StateProvider((ref) {
   return TodoListFilter.all;
 });
 
+final todoListSearch = StateProvider((ref) {
+  return '';
+});
+
+final uncompletedTodosCount = Provider<int>((ref) {
+  return ref.watch(todoListProvider).where((todo) => !todo.completed).length;
+});
+
 final filteredTodos = Provider<List<Todo>>((ref) {
   final filter = ref.watch(todoListFilter);
+  final search = ref.watch(todoListSearch);
   final todos = ref.watch(todoListProvider);
 
   List<Todo> filteredTodos;
@@ -44,7 +53,13 @@ final filteredTodos = Provider<List<Todo>>((ref) {
       break;
   }
 
-  return filteredTodos;
+  if (search.isEmpty) {
+    return filteredTodos;
+  } else {
+    return filteredTodos
+        .where((todo) => todo.description.toLowerCase().contains(search))
+        .toList();
+  }
 });
 
 class TodoList extends StateNotifier<List<Todo>> {
