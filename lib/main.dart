@@ -98,7 +98,7 @@ class Toolbar extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final filter = ref.watch(todoListFilter);
-    final search = ref.watch(todoListSearch);
+    // final search = ref.watch(todoListSearch);
     final searchController = useTextEditingController();
 
     Color? textColorFor(TodoListFilter value) {

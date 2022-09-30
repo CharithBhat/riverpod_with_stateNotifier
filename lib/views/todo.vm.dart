@@ -5,11 +5,13 @@ import 'package:uuid/uuid.dart';
 
 const uid = Uuid();
 
+// need to figure out how to use future provider for sustain
+
 final todoListProvider = StateNotifierProvider<TodoList, List<Todo>>((ref) {
   return TodoList([
     Todo(id: uid.v4(), description: 'learning'),
     Todo(id: uid.v4(), description: 'RiverPod'),
-    Todo(id: uid.v4(), description: 'Right now'),
+    Todo(id: uid.v4(), description: 'Right now. Its alright.'),
   ]);
 });
 
