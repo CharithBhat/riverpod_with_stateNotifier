@@ -1,6 +1,6 @@
 # riverpod_dummy
 
-A new Flutter project.
+A new Flutter project. Working
 
 ## Getting Started
 
